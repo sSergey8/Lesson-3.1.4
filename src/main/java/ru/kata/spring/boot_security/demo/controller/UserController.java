@@ -11,6 +11,7 @@ import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,11 +46,15 @@ public class UserController {
 
     @PostMapping("/users")
     public String saveUser(@ModelAttribute("user") User user,
-                           @RequestParam("roleName") String roleName) {
+                           @RequestParam(value = "roleIds", required = false) List<Long> roleIds) {
 
-        Role role = roleService.getRoleByName(roleName);
-        user.setRoles(Set.of(role));
+        Set<Role> roles = roleIds == null
+                ? Collections.emptySet()
+                : roleIds.stream()
+                .map(roleService::getRoleById)
+                .collect(Collectors.toSet());
 
+        user.setRoles(roles);
         userService.addUser(user);
         return "redirect:/admin/users";
     }
@@ -64,15 +69,14 @@ public class UserController {
     @PostMapping("/update")
     public String updateUser(@ModelAttribute("user") User user,
                              @RequestParam(value = "roleIds", required = false) List<Long> roleIds) {
-        if (roleIds != null && !roleIds.isEmpty()) {
-            Set<Role> roles = roleIds.stream()
-                    .map(roleService::getRoleById)
-                    .collect(Collectors.toSet());
-            user.setRoles(roles);
-        } else {
-            user.setRoles(new HashSet<>());
-        }
 
+        Set<Role> roles = roleIds == null
+                ? Collections.emptySet()
+                : roleIds.stream()
+                .map(roleService::getRoleById)
+                .collect(Collectors.toSet());
+
+        user.setRoles(roles);
         userService.updateUser(user);
         return "redirect:/admin/users";
     }

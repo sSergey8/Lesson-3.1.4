@@ -1,6 +1,7 @@
 package ru.kata.spring.boot_security.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,11 +17,15 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserDao userDao;
-    private final PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserServiceImpl(UserDao userDao, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserDao userDao) {
         this.userDao = userDao;
+    }
+
+    @Autowired
+    public void setPasswordEncoder(@Lazy PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -40,20 +45,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void updateUser(User user) {
         User existingUser = userDao.getUserById(user.getId());
-
-        // Обновляем имя и машину
         existingUser.setName(user.getName());
         existingUser.setCar(user.getCar());
 
-        // Обновляем пароль, только если введено новое значение
         if (user.getPassword() != null && !user.getPassword().isBlank()) {
             existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
         }
 
-        // Обновляем роли
         existingUser.setRoles(user.getRoles());
-
-        // Сохраняем изменения
         userDao.updateUser(existingUser);
     }
 
@@ -82,4 +81,5 @@ public class UserServiceImpl implements UserService {
 //    public User findByUsername(String username) {
 //        return userDao.getByName(username);
 //    }
+
 }

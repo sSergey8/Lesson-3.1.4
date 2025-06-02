@@ -10,18 +10,18 @@ import ru.kata.spring.boot_security.demo.repository.UserDao;
 import javax.annotation.PostConstruct;
 import java.util.Set;
 
-@Component
-public class DataInitializer {
-
-
-    @Autowired
-    private RoleDao roleDao;
-
-    @PostConstruct
-    public void init() {
-        if (roleDao.findAll().isEmpty()) {
-            roleDao.save(new Role("ROLE_USER"));
-            roleDao.save(new Role("ROLE_ADMIN"));
-        }
-    }
-}
+//@Component
+//public class DataInitializer {
+//
+//
+//    @Autowired
+//    private RoleDao roleDao;
+//
+//    @PostConstruct
+//    public void init() {
+//        if (roleDao.findAll().isEmpty()) {
+//            roleDao.save(new Role("ROLE_USER"));
+//            roleDao.save(new Role("ROLE_ADMIN"));
+//        }
+//    }
+//}

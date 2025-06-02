@@ -9,10 +9,6 @@ public class SpringBootSecurityDemoApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringBootSecurityDemoApplication.class, args);
-		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-		String rawPassword = "123";  // например
-		String encodedPassword = encoder.encode(rawPassword);
-		System.out.println(encodedPassword);
 	}
 
 }
