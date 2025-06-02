@@ -18,17 +18,17 @@
     <form th:action="@{/admin/users}" th:object="${user}" method="post" class="card p-3 shadow-sm">
         <div class="mb-2">
             <label class="form-label">Name</label>
-            <input type="text" th:field="*{name}" class="form-control form-control-sm" required/>
+            <input type="text" th:field="*{name}" class="form-control form-control-sm" required autocomplete="off"/>
         </div>
 
         <div class="mb-2">
             <label class="form-label">Car</label>
-            <input type="text" th:field="*{car}" class="form-control form-control-sm" required/>
+            <input type="text" th:field="*{car}" class="form-control form-control-sm" required autocomplete="off"/>
         </div>
 
         <div class="mb-2">
             <label class="form-label">Password</label>
-            <input type="password" th:field="*{password}" class="form-control form-control-sm" required/>
+            <input type="password" th:field="*{password}" class="form-control form-control-sm" required autocomplete="new-password"/>
         </div>
 
         <div class="mb-2">

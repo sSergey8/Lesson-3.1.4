@@ -5,7 +5,6 @@ import ru.kata.spring.boot_security.demo.model.Role;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.transaction.Transactional;
 import java.util.List;
 
 @Repository
@@ -29,13 +28,6 @@ public class RoleDaoImpl implements RoleDao {
     @Override
     public Role findById(Long id) {
         return entityManager.find(Role.class, id);
-    }
-
-    @Override
-    @Transactional
-    public Role save(Role role) {
-        entityManager.persist(role);
-        return role;
     }
 }
 
