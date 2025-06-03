@@ -1,6 +1,7 @@
 package ru.kata.spring.boot_security.demo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -44,7 +45,8 @@ public class AdminUserController {
 
     @PostMapping("/users")
     public String saveUser(@ModelAttribute("user") User user,
-                           @RequestParam(value = "roleIds", required = false) List<Long> roleIds) {
+                           @RequestParam(value = "roleIds", required = false) List<Long> roleIds,
+                           Model model) {
 
         Set<Role> roles = roleIds == null
                 ? Collections.emptySet()
@@ -53,8 +55,16 @@ public class AdminUserController {
                 .collect(Collectors.toSet());
 
         user.setRoles(roles);
-        userService.addUser(user);
-        return "redirect:/admin/users";
+
+        try {
+            userService.addUser(user);
+            return "redirect:/admin/users";
+        } catch (DataIntegrityViolationException e) {
+            model.addAttribute("errorMessage", "Такой логин уже занят");
+            model.addAttribute("user", user);
+            model.addAttribute("allRoles", roleService.getAllRoles());
+            return "new";
+        }
     }
 
     @GetMapping("/edit")

@@ -19,6 +19,7 @@
         <div class="mb-2">
             <label class="form-label">Name</label>
             <input type="text" th:field="*{name}" class="form-control form-control-sm" required autocomplete="off"/>
+            <div th:if="${errorMessage}" class="form-text text-danger" th:text="${errorMessage}"></div>
         </div>
 
         <div class="mb-2">
