@@ -12,6 +12,7 @@ import ru.kata.spring.boot_security.demo.repository.UserDao;
 
 import javax.persistence.NoResultException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -69,11 +70,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        try {
-            return userDao.getByName(username);
-        } catch (NoResultException e) {
+        User user = userDao.getByName(username);
+        if (user == null) {
             throw new UsernameNotFoundException("Пользователь не найден");
         }
+        return user;
+    }
 
+    @Override
+    public User getUserByName(String name) {
+        return userDao.getByName(name);
     }
 }

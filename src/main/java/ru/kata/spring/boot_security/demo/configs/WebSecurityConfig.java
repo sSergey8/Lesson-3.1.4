@@ -58,23 +58,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        DaoAuthenticationProvider inMemoryProvider = new DaoAuthenticationProvider();
-        inMemoryProvider.setPasswordEncoder(passwordEncoder);
-        inMemoryProvider.setUserDetailsService(inMemoryUserDetailsManager());
-
-        DaoAuthenticationProvider daoProvider = daoAuthenticationProvider();
-
-        auth.authenticationProvider(inMemoryProvider);
-        auth.authenticationProvider(daoProvider);
-    }
-
-    @Bean
-    public UserDetailsService inMemoryUserDetailsManager() {  // Для тестирования. Что бы зайти под логином и паролем dmin при пустой БД
-        UserDetails admin = User.withUsername("admin")
-                .password(passwordEncoder.encode("admin"))
-                .roles("ADMIN")
-                .build();
-        return new InMemoryUserDetailsManager(admin);
+        auth.authenticationProvider(daoAuthenticationProvider());
     }
 
 
@@ -85,6 +69,4 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }
-
-
 }

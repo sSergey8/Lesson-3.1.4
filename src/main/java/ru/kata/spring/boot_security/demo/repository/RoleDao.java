@@ -8,5 +8,6 @@ public interface RoleDao {
     List<Role> findAll();
     Role findByName(String name);
     Role findById(Long id);
+    void save(Role role);
 }
 
