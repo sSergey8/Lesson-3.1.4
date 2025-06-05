@@ -26,18 +26,35 @@ public class DatabaseInitializer {
     @PostConstruct
     @Transactional
     public void init() {
-        if (userService.getUserByName("admin") != null) {
-            return;
+        // Проверяем наличие администратора по email
+        if (userService.getUserByEmail("admin@mail.ru") != null) {
+            return; // Если админ с таким email уже есть — ничего не делаем
         }
 
-        Role adminRole = new Role("ROLE_ADMIN");
-        Role userRole = new Role("ROLE_USER");
+        // Проверяем наличие ролей в БД
+        Role adminRole = roleService.getRoleByName("ROLE_ADMIN");
+        Role userRole = roleService.getRoleByName("ROLE_USER");
 
-        roleService.saveRole(adminRole);
-        roleService.saveRole(userRole);
+        if (adminRole == null) {
+            adminRole = new Role("ROLE_ADMIN");
+            roleService.saveRole(adminRole);
+        }
 
-        // Создаем admin пользователя
-        User admin = new User("admin", "adminCar", "admin", Set.of(adminRole));
+        if (userRole == null) {
+            userRole = new Role("ROLE_USER");
+            roleService.saveRole(userRole);
+        }
+
+        // Создаем администратора
+        User admin = new User(
+                "admin",           // имя
+                "firsAdmin",       // фамилия
+                "admin@mail.ru",   // email
+                30,                // возраст
+                "admin",           // пароль
+                Set.of(adminRole)  // роли
+        );
+
         userService.addUser(admin);
     }
 }

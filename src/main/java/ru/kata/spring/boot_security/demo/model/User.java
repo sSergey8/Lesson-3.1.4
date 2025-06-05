@@ -1,8 +1,10 @@
 package ru.kata.spring.boot_security.demo.model;
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
+
+
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.GrantedAuthority;
 import javax.persistence.*;
 import java.util.Collection;
 import java.util.HashSet;
@@ -16,11 +18,17 @@ public class User implements UserDetails {
     @Column(name = "id")
     private int id;
 
-    @Column(name = "name", unique = true, nullable = false)
-    private String name;
+    @Column(name = "email", unique = true, nullable = false)
+    private String email;
 
-    @Column(name = "car")
-    private String car;
+    @Column(name = "firstname")
+    private String firstname;
+
+    @Column(name = "lastname")
+    private String lastname;
+
+    @Column(name = "age")
+    private int age;
 
     private String password;
 
@@ -34,9 +42,12 @@ public class User implements UserDetails {
 
     public User() { }
 
-    public User(String name, String car, String password, Set<Role> roles) {
-        this.name = name;
-        this.car = car;
+    public User(String lastname, String firstname,
+                String email, int age, String password, Set<Role> roles) {
+        this.lastname = lastname;
+        this.firstname = firstname;
+        this.email = email;
+        this.age = age;
         this.password = password;
         this.roles = roles;
     }
@@ -49,20 +60,36 @@ public class User implements UserDetails {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getEmail() {
+        return email;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
-    public String getCar() {
-        return car;
+    public String getFirstname() {
+        return firstname;
     }
 
-    public void setCar(String car) {
-        this.car = car;
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
     }
 
     @Override
@@ -89,7 +116,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return name;
+        return email;
     }
 
     @Override

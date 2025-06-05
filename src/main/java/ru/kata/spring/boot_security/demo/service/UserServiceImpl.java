@@ -15,70 +15,65 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class UserServiceImpl implements UserService {
-
     private final UserDao userDao;
-    private PasswordEncoder passwordEncoder;
+    private final RoleService roleService;
+    private final PasswordEncoder passwordEncoder;  // Для хеширования пароля
 
     @Autowired
-    public UserServiceImpl(UserDao userDao) {
+    public UserServiceImpl(UserDao userDao, RoleService roleService, PasswordEncoder passwordEncoder) {
         this.userDao = userDao;
-    }
-
-    @Autowired
-    public void setPasswordEncoder(@Lazy PasswordEncoder passwordEncoder) {
+        this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    @Transactional
-    public void addUser(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userDao.addUser(user);
-    }
-
-    @Override
-    public List<User> getAllUsers() {
-        return userDao.getAllUsers();
-    }
-
-    @Override
-    @Transactional
-    public void updateUser(User user) {
-        User existingUser = userDao.getUserById(user.getId());
-        existingUser.setName(user.getName());
-        existingUser.setCar(user.getCar());
-
-        if (user.getPassword() != null && !user.getPassword().isBlank()) {
-            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
-        }
-
-        existingUser.setRoles(user.getRoles());
-        userDao.updateUser(existingUser);
-    }
-
-    @Override
-    @Transactional
-    public void deleteUser(int id) {
-        userDao.deleteUser(id);
-    }
-
-    @Override
-    public User getUserById(int id) {
-        return userDao.getUserById(id);
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userDao.getByName(username);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userDao.findByEmail(email);
         if (user == null) {
-            throw new UsernameNotFoundException("Пользователь не найден");
+            throw new UsernameNotFoundException("User not found");
         }
         return user;
     }
 
     @Override
-    public User getUserByName(String name) {
-        return userDao.getByName(name);
+    public List<User> getAllUsers() {
+        return userDao.findAll();
+    }
+
+    @Override
+    public User getUserById(int id) {
+        return userDao.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
+
+    @Override
+    public void saveUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userDao.save(user);
+    }
+
+    @Override
+    public void updateUser(User user) {
+        User existingUser = getUserById(user.getId());
+
+        existingUser.setFirstname(user.getFirstname());
+        existingUser.setLastname(user.getLastname());
+        existingUser.setEmail(user.getEmail());
+        existingUser.setAge(user.getAge());
+
+        // Если пароль изменён, кодируем его
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+
+        existingUser.setRoles(user.getRoles());
+        userDao.save(existingUser);
+    }
+
+    @Override
+    public void deleteUser(int id) {
+        userDao.deleteById(id);
     }
 }
