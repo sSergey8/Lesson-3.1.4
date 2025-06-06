@@ -4,11 +4,17 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
+import ru.kata.spring.boot_security.demo.repository.RoleRepository;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
+import java.security.Principal;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
@@ -22,49 +28,52 @@ public class AdminController {
         this.roleService = roleService;
     }
 
-    @GetMapping
-    public String showAllUsers(Model model, @AuthenticationPrincipal User currentUser) {
-        model.addAttribute("users", userService.getAllUsers());
-        model.addAttribute("user", currentUser);
-        return "admin";  // предполагается, что у тебя есть admin.html с таблицей пользователей
-    }
-
-    @GetMapping("/new")
-    public String newUserForm(Model model, @AuthenticationPrincipal User currentUser) {
+    // Метод для главной страницы админа
+    @GetMapping({"", "/"})
+    public String adminHome(Model model) {
+        // Можно добавить в модель список всех пользователей, ролей и т.д.
+        model.addAttribute("users", userService.findAll());
+        model.addAttribute("roles", roleService.getAllRoles());
         model.addAttribute("user", new User());
-        model.addAttribute("roles", roleService.getAllRoles());
-        model.addAttribute("currentUser", currentUser);
-        return "newUser";  // форма создания пользователя (thymeleaf)
+        return "admin";  // имя шаблона admin.html
     }
 
-    @PostMapping("/new")
-    public String createUser(@ModelAttribute User user,
-                             @RequestParam("rolesSelected") Set<String> rolesSelected) {
-        user.setRoles(roleService.getRolesByNames(rolesSelected));
-        userService.saveUser(user);
-        return "redirect:/admin";
-    }
-
-    @GetMapping("/edit")
-    public String editUserForm(@RequestParam("id") int id, Model model, @AuthenticationPrincipal User currentUser) {
-        User user = userService.getUserById(id);
+    // Пример метода для вывода конкретного пользователя
+    @GetMapping("/edit/{id}")
+    public String getUser(@PathVariable("id") int id, Model model) {
+        User user = userService.findById(id);
+        if (user == null) {
+            return "error";
+        }
         model.addAttribute("user", user);
-        model.addAttribute("roles", roleService.getAllRoles());
-        model.addAttribute("currentUser", currentUser);
-        return "editUser";  // форма редактирования
+        return "user"; // или "edit-user", как у тебя шаблон называется
     }
 
-    @PostMapping("/edit")
-    public String updateUser(@ModelAttribute User user,
-                             @RequestParam("rolesSelected") Set<String> rolesSelected) {
-        user.setRoles(roleService.getRolesByNames(rolesSelected));
-        userService.updateUser(user);
+//    @GetMapping("/new")
+//    public String NewUserForm(Model model) {
+//        model.addAttribute("user", new User());
+//        model.addAttribute("roles", roleService.getAllRoles()); // если роли динамически
+//        return "new";
+//    }
+
+    @PostMapping("/save")
+    public String createUser(@ModelAttribute("newUser") User user,
+                             @RequestParam(value = "roles", required = false) List<Long> roleIds) {
+        Set<Role> roles = new HashSet<>();
+        if (roleIds != null) {
+            roles = new HashSet<>(roleService.findByIds(roleIds));
+        }
+        user.setRoles(roles);
+
+        // Тут нужно обязательно кодировать пароль перед сохранением
+        userService.save(user);
         return "redirect:/admin";
     }
 
     @PostMapping("/delete")
-    public String deleteUser(@RequestParam("id") int id) {
-        userService.deleteUser(id);
-        return "redirect:/admin";
+    public String deleteUserPost(@RequestParam("id") int id) {
+        userService.deleteById(id);
+        return "redirect:/admin/";
     }
+
 }

@@ -9,20 +9,20 @@ import ru.kata.spring.boot_security.demo.service.UserService;
 
 import java.security.Principal;
 
-@Controller
-@RequestMapping("/user")
-public class UserController {
-    private final UserService userService;
-
-    @Autowired
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
-    @GetMapping({"", "/", "/users"})
-    public String viewUsers(Model model, Principal principal) {
-        model.addAttribute("users", userService.getAllUsers());
-        model.addAttribute("username", principal.getName());
-        return "user";
-    }
-}
+//@Controller
+//@RequestMapping("/user")
+//public class UserController {
+//    private final UserService userService;
+//
+//    @Autowired
+//    public UserController(UserService userService) {
+//        this.userService = userService;
+//    }
+//
+//    @GetMapping({"", "/", "/users"})
+//    public String viewUsers(Model model, Principal principal) {
+//        model.addAttribute("users", userService.getAllUsers());
+//        model.addAttribute("username", principal.getName());
+//        return "user";
+//    }
+//}
