@@ -11,8 +11,8 @@
             margin: 0 auto;
         }
 
-        /* Стили для label: жирный, по центру, отступ снизу */
-        #newUserFormDiv label.form-label {
+        /* Общие стили для форм */
+        .form-container label.form-label {
             font-weight: 700;
             text-align: center;
             display: block;
@@ -20,18 +20,17 @@
             margin-bottom: 0.2rem;
         }
 
-        /* Сделаем инпуты не по всей ширине, а под размер формы */
-        #newUserFormDiv input.form-control,
-        #newUserFormDiv select.form-select {
+        .form-container input.form-control,
+        .form-container select.form-select {
             width: 100%;
         }
 
-        /* Кастомные стили для мультиселекта ролей */
-        #newUserFormDiv select.role-select {
+        /* Стили для мультиселекта ролей */
+        .role-select {
             height: 60px;
         }
 
-        /* Стили для модального окна подтверждения удаления */
+        /* Остальные стили из второй формы */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -45,85 +44,118 @@
             align-items: center;
         }
 
-        .delete-modal {
+        .custom-modal {
             background-color: white;
             padding: 20px;
             border-radius: 5px;
-            width: 450px; /* Фиксированная ширина окна */
+            width: 450px;
             position: relative;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .delete-modal .form-control,
-        .delete-modal .form-select {
-            width: 60%;       /* Или другое значение: 60%, 220px и т.п. */
-            margin: 0 auto;   /* Чтобы выровнять по центру */
+        .custom-modal .form-control,
+        .custom-modal .form-select {
+            width: 80%;
+            margin: 0 auto 0.8rem;
+            display: block;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            transition: border-color 0.15s ease-in-out;
         }
 
-        .delete-modal h5 {
+        .custom-modal h5 {
             margin-bottom: 1rem;
             text-align: left;
             font-weight: bold;
+            font-size: 1.25rem;
+            color: #333;
         }
 
-        .delete-modal .form-label {
+        .custom-modal hr {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 1rem 0;
+        }
+
+        .custom-modal .form-label {
             text-align: center;
             display: block;
             font-weight: 600;
-            margin-bottom: 0.3rem; /* Уменьшенный отступ */
+            margin-bottom: 0.3rem;
+            color: #495057;
         }
 
-        .delete-modal .form-control {
-            padding: 0.3rem 0.75rem; /* Уменьшенный padding */
-            font-size: 0.9rem; /* Уменьшенный размер шрифта */
-            height: 32px; /* Фиксированная высота полей ввода */
-            margin-bottom: 0.5rem; /* Отступ между полями */
-        }
-
-        .delete-modal .role-select {
-            height: 50px; /* Высота поля ролей */
-            padding: 0.3rem 0.75rem;
-            font-size: 0.9rem;
-        }
-
-        .delete-modal hr {
-            border: none;
-            border-top: 1px solid #ccc;
-            margin: 0.8rem 0;
-        }
-
-        .delete-modal .form-control:disabled {
-            background-color: #e9ecef;
+        .custom-modal .form-control:disabled {
+            background-color: #f8f9fa;
             opacity: 1;
+            cursor: not-allowed;
         }
 
-        .delete-modal .close-icon {
+        .close-icon {
             position: absolute;
             top: 10px;
             right: 15px;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             cursor: pointer;
-            color: #888;
+            color: #6c757d;
+            transition: color 0.2s;
         }
 
-        .delete-modal .button-group {
+        .close-icon:hover {
+            color: #343a40;
+        }
+
+        .button-group {
             display: flex;
             justify-content: flex-end;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 1.5rem;
         }
 
-        /* Компактные стили для модального окна */
-        .delete-modal .mb-3 {
+        .custom-modal .mb-3 {
             margin-bottom: 0.8rem !important;
+        }
+
+        /* Стили для режима просмотра User */
+        .action-column {
+            display: table-cell;
+        }
+
+        .user-view .action-column {
+            display: none;
+        }
+
+        .user-view .nav-link.active {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+
+        /* Адаптивность для мобильных */
+        @media (max-width: 576px) {
+            .custom-modal {
+                width: 95%;
+                padding: 15px;
+            }
+
+            .custom-modal .form-control,
+            .custom-modal .form-select {
+                width: 90%;
+            }
         }
     </style>
 </head>
 <body class="bg-light">
 
-<!-- Top nav -->
 <nav class="navbar navbar-dark bg-dark px-3 d-flex justify-content-between align-items-center">
     <div class="text-white fw-bold">
-        <span th:if="${user != null}" th:text="${user.email + ' with roles: ' + user.roles}"></span>
+        <span th:if="${currentUser != null}">
+            <span th:text="${currentUser.email}">user@example.com</span>
+            with roles:
+            <span th:each="role : ${currentUser.roles}" th:text="${role.name} + ' '"></span>
+        </span>
     </div>
     <form th:action="@{/logout}" method="post" class="mb-0">
         <button type="submit" class="btn btn-link text-white text-decoration-none">Logout</button>
@@ -132,47 +164,38 @@
 
 <div class="container-fluid">
     <div class="row">
-        <!-- Sidebar -->
         <div class="col-md-2 bg-white pt-3 border-end min-vh-100">
             <ul class="nav flex-column nav-pills">
                 <li class="nav-item mb-2">
-                    <a class="nav-link active" href="#">Admin</a>
+                    <a href="#" id="adminViewBtn" class="nav-link active">Admin</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">User</a>
+                    <a href="#" id="userViewBtn" class="nav-link">User</a>
                 </li>
             </ul>
         </div>
 
-        <!-- Main content -->
         <div class="col-md-10 pt-4">
             <h2>User panel</h2>
 
-            <ul class="nav nav-tabs mb-3">
+            <ul class="nav nav-tabs mb-3 form-tabs">
                 <li class="nav-item">
-                    <a href="#" id="showUsersBtn" class="nav-link active">Users table</a>
+                    <a href="#" id="showUsersBtn" class="nav-link" th:classappend="${showForm != true} ? 'active'">Users table</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" id="showNewUserFormBtn" class="nav-link">New User</a>
+                    <a href="#" id="showNewUserFormBtn" class="nav-link" th:classappend="${showForm == true} ? 'active'">New User</a>
                 </li>
             </ul>
 
-            <!-- Таблица пользователей -->
-            <div id="usersTableDiv">
+            <div id="usersTableDiv" th:style="${emailError == null} ? '' : 'display:none;'">
                 <h5 class="fw-semibold mb-3">All users</h5>
                 <div class="card">
                     <div class="card-body p-0">
                         <table class="table mb-0 table-striped">
                             <thead class="table-light">
                             <tr>
-                                <th>ID</th>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Age</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Edit</th>
-                                <th>Delete</th>
+                                <th>ID</th><th>First Name</th><th>Last Name</th><th>Age</th>
+                                <th>Email</th><th>Role</th><th class="action-column">Edit</th><th class="action-column">Delete</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -185,25 +208,19 @@
                                 <td>
                                     <span th:each="role : ${u.roles}" th:text="${role.name} + ' '"></span>
                                 </td>
-                                <td>
+                                <td class="action-column">
                                     <button type="button" class="btn btn-sm btn-info text-white edit-btn"
-                                            th:data-id="${u.id}"
-                                            th:data-firstname="${u.firstname}"
-                                            th:data-lastname="${u.lastname}"
-                                            th:data-age="${u.age}"
-                                            th:data-email="${u.email}"
-                                            th:data-roles="${u.roles}">
+                                            th:data-id="${u.id}" th:data-firstname="${u.firstname}"
+                                            th:data-lastname="${u.lastname}" th:data-age="${u.age}"
+                                            th:data-email="${u.email}" th:data-roles="${u.roles}">
                                         Edit
                                     </button>
                                 </td>
-                                <td>
+                                <td class="action-column">
                                     <button type="button" class="btn btn-sm btn-danger delete-btn"
-                                            th:data-id="${u.id}"
-                                            th:data-firstname="${u.firstname}"
-                                            th:data-lastname="${u.lastname}"
-                                            th:data-age="${u.age}"
-                                            th:data-email="${u.email}"
-                                            th:data-roles="${u.roles}">
+                                            th:data-id="${u.id}" th:data-firstname="${u.firstname}"
+                                            th:data-lastname="${u.lastname}" th:data-age="${u.age}"
+                                            th:data-email="${u.email}" th:data-role="${u.roles[0].name}">
                                         Delete
                                     </button>
                                 </td>
@@ -214,12 +231,10 @@
                 </div>
             </div>
 
-            <!-- Форма нового пользователя, изначально скрыта -->
-            <div id="newUserFormDiv" style="display:none;">
+            <!-- Форма нового пользователя как в первой форме -->
+            <div id="newUserFormDiv" th:style="${emailError != null} ? '' : 'display:none;'">
                 <h5 class="fw-semibold mb-3">Add new user</h5>
-
-                <form th:action="@{/admin/save}" th:object="${user}" method="post" id="userForm" autocomplete="off">
-
+                <form th:action="@{/admin/save}" th:object="${user}" method="post" id="userForm" autocomplete="off" class="form-container">
                     <div class="mb-3">
                         <label for="firstName" class="form-label">First name</label>
                         <input type="text" th:field="*{firstname}" class="form-control" id="firstName" required />
@@ -237,7 +252,9 @@
 
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" th:field="*{email}" class="form-control" id="email" required autocomplete="off" />
+                        <input type="email" th:field="*{email}" class="form-control"
+                               th:classappend="${emailError != null} ? 'is-invalid'" id="email" required autocomplete="off" />
+                        <div th:if="${emailError != null}" class="error-message" th:text="${emailError}"></div>
                     </div>
 
                     <div class="mb-3">
@@ -254,120 +271,95 @@
 
                     <div class="d-flex justify-content-center">
                         <button type="submit" class="btn btn-success">Add new user</button>
+                        <button type="button" onclick="showTab('usersTable')" class="btn btn-secondary ms-2">Cancel</button>
                     </div>
                 </form>
             </div>
-
         </div>
     </div>
 </div>
 
-<!-- Модальное окно подтверждения удаления -->
+<!-- Модальные окна -->
 <div id="deleteModal" class="modal-overlay">
-    <div class="delete-modal">
-        <span class="close-icon" onclick="deleteModal.style.display='none'">&times;</span>
+    <div class="custom-modal">
+        <span class="close-icon" onclick="closeModal('deleteModal')">&times;</span>
         <h5>Delete user</h5>
         <hr />
-
         <form id="deleteForm" method="post" th:action="@{/admin/delete}">
             <input type="hidden" name="id" id="deleteUserId" />
-
             <div class="mb-3">
-                <label for="deleteUserIdDisplay" class="form-label">User ID</label>
+                <label class="form-label">ID</label>
                 <input type="text" class="form-control" id="deleteUserIdDisplay" disabled />
             </div>
-
             <div class="mb-3">
-                <label for="deleteFirstName" class="form-label">First name</label>
+                <label class="form-label">First name</label>
                 <input type="text" class="form-control" id="deleteFirstName" disabled />
             </div>
-
             <div class="mb-3">
-                <label for="deleteLastName" class="form-label">Last name</label>
+                <label class="form-label">Last name</label>
                 <input type="text" class="form-control" id="deleteLastName" disabled />
             </div>
-
             <div class="mb-3">
-                <label for="deleteAge" class="form-label">Age</label>
+                <label class="form-label">Age</label>
                 <input type="number" class="form-control" id="deleteAge" disabled />
             </div>
-
             <div class="mb-3">
-                <label for="deleteEmail" class="form-label">Email</label>
+                <label class="form-label">Email</label>
                 <input type="email" class="form-control" id="deleteEmail" disabled />
             </div>
-
             <div class="mb-3">
-                <label for="deleteRoles" class="form-label">Roles</label>
-                <select multiple class="form-select role-select" id="deleteRoles" disabled>
-                    <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name}"></option>
-                </select>
+                <label class="form-label">Role</label>
+                <input type="text" class="form-control" id="deleteRole" disabled />
             </div>
-
             <hr />
-
             <div class="button-group">
-                <button type="button" id="closeDeleteModal" class="btn btn-secondary">Close</button>
+                <button type="button" onclick="closeModal('deleteModal')" class="btn btn-secondary">Close</button>
                 <button type="submit" class="btn btn-danger">Delete</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Модальное окно редактирования -->
 <div id="editModal" class="modal-overlay">
-    <div class="delete-modal">
-        <span class="close-icon" onclick="editModal.style.display='none'">&times;</span>
+    <div class="custom-modal">
+        <span class="close-icon" onclick="closeModal('editModal')">&times;</span>
         <h5>Edit user</h5>
         <hr />
-
         <form id="editForm" method="post" th:action="@{/admin/edit}">
             <input type="hidden" name="id" id="editUserId" />
-
             <div class="mb-3">
-                <label for="editUserIdDisplay" class="form-label">User ID</label>
+                <label class="form-label">ID</label>
                 <input type="text" class="form-control" id="editUserIdDisplay" disabled />
             </div>
-
             <div class="mb-3">
-                <label for="editFirstName" class="form-label">First name</label>
+                <label class="form-label">First name</label>
                 <input type="text" name="firstname" class="form-control" id="editFirstName" required />
             </div>
-
             <div class="mb-3">
-                <label for="editLastName" class="form-label">Last name</label>
+                <label class="form-label">Last name</label>
                 <input type="text" name="lastname" class="form-control" id="editLastName" required />
             </div>
-
             <div class="mb-3">
-                <label for="editAge" class="form-label">Age</label>
+                <label class="form-label">Age</label>
                 <input type="number" name="age" class="form-control" id="editAge" required />
             </div>
-
             <div class="mb-3">
-                <label for="editEmail" class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" id="editEmail" required autocomplete="off" />
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" id="editEmail" required />
             </div>
-
             <div class="mb-3">
-                <label for="editPassword" class="form-label">Password</label>
-                <input type="password" name="password" class="form-control" id="editPassword" autocomplete="new-password" />
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control" id="editPassword" />
             </div>
-
             <div class="mb-3">
-                <label for="editRoles" class="form-label">Roles</label>
+                <label class="form-label">Roles</label>
                 <select multiple class="form-select role-select" id="editRoles" name="roles" required>
-                    <option th:each="r : ${roles}"
-                            th:value="${r.id}"
-                            th:text="${r.name}">
-                    </option>
+                    <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name}"></option>
                 </select>
             </div>
-
             <hr />
-
             <div class="button-group">
-                <button type="button" id="closeEditModal" class="btn btn-secondary">Close</button>
+                <button type="button" onclick="closeModal('editModal')" class="btn btn-secondary">Close</button>
                 <button type="submit" class="btn btn-primary">Edit</button>
             </div>
         </form>
@@ -375,176 +367,157 @@
 </div>
 
 <script>
-    const usersTableDiv = document.getElementById('usersTableDiv');
-    const newUserFormDiv = document.getElementById('newUserFormDiv');
-    const userForm = document.getElementById('userForm');
-    const showUsersBtn = document.getElementById('showUsersBtn');
-    const showNewUserFormBtn = document.getElementById('showNewUserFormBtn');
+    // Общие функции
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
 
-    // Элементы модальных окон
-    const deleteModal = document.getElementById('deleteModal');
-    const editModal = document.getElementById('editModal');
+    function parseRoles(rolesRaw) {
+        try {
+            return JSON.parse(rolesRaw.replace(/'/g, '"'));
+        } catch (e) {
+            return rolesRaw.replace(/[\[\]]/g, '').split(',').map(role => {
+                const name = role.trim().replace("ROLE_", "");
+                return { name: name };
+            });
+        }
+    }
 
-    // Кнопки закрытия модальных окон
-    const closeDeleteModalBtn = document.getElementById('closeDeleteModal');
-    const closeEditModalBtn = document.getElementById('closeEditModal');
+    function setSelectedRoles(selectElement, roles) {
+        Array.from(selectElement.options).forEach(option => option.selected = false);
+        roles.forEach(role => {
+            Array.from(selectElement.options).forEach(option => {
+                if (option.text === role.name || option.text === role.name.replace("ROLE_", "")) {
+                    option.selected = true;
+                }
+            });
+        });
+    }
 
-    // Обработчики переключения вкладок
-    showUsersBtn.addEventListener('click', e => {
-        e.preventDefault();
-        usersTableDiv.style.display = '';
-        newUserFormDiv.style.display = 'none';
-        showUsersBtn.classList.add('active');
-        showNewUserFormBtn.classList.remove('active');
-    });
+    function fillModalForm(modalPrefix, data) {
+        document.getElementById(`${modalPrefix}UserId`).value = data.id;
+        document.getElementById(`${modalPrefix}UserIdDisplay`).value = data.id;
+        document.getElementById(`${modalPrefix}FirstName`).value = data.firstname;
+        document.getElementById(`${modalPrefix}LastName`).value = data.lastname;
+        document.getElementById(`${modalPrefix}Age`).value = data.age;
+        document.getElementById(`${modalPrefix}Email`).value = data.email;
 
-    showNewUserFormBtn.addEventListener('click', e => {
-        e.preventDefault();
-        usersTableDiv.style.display = 'none';
-        newUserFormDiv.style.display = '';
-        showUsersBtn.classList.remove('active');
-        showNewUserFormBtn.classList.add('active');
-    });
+        if (modalPrefix === 'delete') {
+            const roles = parseRoles(data.roles);
+            document.getElementById('deleteRole').value = roles.length > 0 ? roles[0].name : '';
+        } else {
+            const roles = parseRoles(data.roles);
+            setSelectedRoles(document.getElementById(`${modalPrefix}Roles`), roles);
+        }
+    }
 
-    // Обработчики кнопок Delete
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Заполнить форму удаления данными пользователя
-            const id = btn.getAttribute('data-id');
-            const firstname = btn.getAttribute('data-firstname');
-            const lastname = btn.getAttribute('data-lastname');
-            const age = btn.getAttribute('data-age');
-            const email = btn.getAttribute('data-email');
-            const rolesRaw = btn.getAttribute('data-roles');
+    function showTab(tabName) {
+        const showTable = tabName === 'usersTable';
+        document.getElementById('usersTableDiv').style.display = showTable ? '' : 'none';
+        document.getElementById('newUserFormDiv').style.display = showTable ? 'none' : '';
+        document.getElementById('showUsersBtn').classList.toggle('active', showTable);
+        document.getElementById('showNewUserFormBtn').classList.toggle('active', !showTable);
 
-            // Заполнить поля формы удаления
-            document.getElementById('deleteUserId').value = id;
-            document.getElementById('deleteUserIdDisplay').value = id;
-            document.getElementById('deleteFirstName').value = firstname;
-            document.getElementById('deleteLastName').value = lastname;
-            document.getElementById('deleteAge').value = age;
-            document.getElementById('deleteEmail').value = email;
+        if (!showTable) {
+            resetFormErrors();
+        }
+    }
 
-            // Заполнение ролей: так как в data-roles приходит объект, сделаем для простоты строку с названиями
-            // и просто выберем в списке те, что соответствуют.
-            // Но в данном случае data-roles — объект, поэтому проще игнорировать или выставлять роли по имени
-            // Сделаем проще: очистим все option, затем выставим options, установим selected по именам ролей
+    function showAllUsers() {
+        document.querySelectorAll('#usersTableDiv tbody tr').forEach(row => {
+            row.style.display = '';
+        });
+    }
 
-            // Получим все опции в select ролей удаления
-            const deleteRolesSelect = document.getElementById('deleteRoles');
-// Снимем выбор со всех опций
-            for (const option of deleteRolesSelect.options) {
-                option.selected = false;
+    function showAdminUsersOnly() {
+        document.querySelectorAll('#usersTableDiv tbody tr').forEach(row => {
+            const rolesText = row.querySelector('td:nth-child(6)').textContent;
+            if (rolesText.includes('ADMIN')) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
             }
+        });
+    }
 
-            try {
-                // Пробуем распарсить JSON, если rolesRaw — массив объектов [{id:1, name:"ROLE_USER"}]
-                const rolesParsed = JSON.parse(rolesRaw.replace(/'/g, '"'));
-                rolesParsed.forEach(role => {
-                    for (const option of deleteRolesSelect.options) {
-                        if (option.text === role.name || option.text === role.name.replace("ROLE_", "")) {
-                            option.selected = true;
-                        }
-                    }
-                });
-            } catch (e) {
-                // Если это строка вида [ROLE_USER, ROLE_ADMIN]
-                const cleaned = rolesRaw.replace(/[\[\]]/g, '').split(',');
-                cleaned.forEach(roleName => {
-                    const trimmed = roleName.trim();
-                    for (const option of deleteRolesSelect.options) {
-                        if (option.text === trimmed || option.text === trimmed.replace("ROLE_", "")) {
-                            option.selected = true;
-                        }
-                    }
-                });
+    function resetFormErrors() {
+        const emailField = document.getElementById('email');
+        if (emailField) emailField.classList.remove('is-invalid');
+        document.querySelectorAll('.error-message').forEach(msg => msg.style.display = 'none');
+    }
+
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', function() {
+        if (/*[[${emailError}]]*/ false) {
+            document.getElementById('email').focus();
+        }
+
+        // Обработчики кнопок
+        document.getElementById('showUsersBtn').addEventListener('click', e => {
+            e.preventDefault();
+            showTab('usersTable');
+        });
+
+        document.getElementById('showNewUserFormBtn').addEventListener('click', e => {
+            e.preventDefault();
+            showTab('newUserForm');
+        });
+
+        // Обработчики для кнопок вида
+        document.getElementById('adminViewBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('usersTableDiv').classList.remove('user-view');
+            this.classList.add('active');
+            document.getElementById('userViewBtn').classList.remove('active');
+            showAllUsers();
+        });
+
+        document.getElementById('userViewBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('usersTableDiv').classList.add('user-view');
+            this.classList.add('active');
+            document.getElementById('adminViewBtn').classList.remove('active');
+            showAdminUsersOnly();
+        });
+
+        // Обработчики кнопок Delete и Edit
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const data = {
+                    id: this.getAttribute('data-id'),
+                    firstname: this.getAttribute('data-firstname'),
+                    lastname: this.getAttribute('data-lastname'),
+                    age: this.getAttribute('data-age'),
+                    email: this.getAttribute('data-email'),
+                    roles: JSON.stringify([{name: this.getAttribute('data-role')}])
+                };
+                fillModalForm('delete', data);
+                document.getElementById('deleteModal').style.display = 'flex';
+            });
+        });
+
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const data = {
+                    id: this.getAttribute('data-id'),
+                    firstname: this.getAttribute('data-firstname'),
+                    lastname: this.getAttribute('data-lastname'),
+                    age: this.getAttribute('data-age'),
+                    email: this.getAttribute('data-email'),
+                    roles: this.getAttribute('data-roles')
+                };
+                fillModalForm('edit', data);
+                document.getElementById('editModal').style.display = 'flex';
+            });
+        });
+
+        // Закрытие модальных окон по клику вне формы
+        window.addEventListener('click', e => {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.style.display = 'none';
             }
-            // Разберём rolesRaw (это строка вида "[ROLE_USER, ROLE_ADMIN]" или JSON)
-            // Здесь у нас th:data-roles="${u.roles}" — это скорее массив объектов. Для корректной передачи надо привести к строке.
-            // Чтобы не усложнять, пропустим, оставим все роли невыбранными.
-
-            // Показать модальное окно удаления
-            deleteModal.style.display = 'flex';
         });
     });
-
-    closeDeleteModalBtn.addEventListener('click', () => {
-        deleteModal.style.display = 'none';
-    });
-
-    // Обработчики кнопок Edit
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const id = btn.getAttribute('data-id');
-            const firstname = btn.getAttribute('data-firstname');
-            const lastname = btn.getAttribute('data-lastname');
-            const age = btn.getAttribute('data-age');
-            const email = btn.getAttribute('data-email');
-            const rolesRaw = btn.getAttribute('data-roles');
-
-            // Заполнить форму редактирования
-            document.getElementById('editUserId').value = id;
-            document.getElementById('editUserIdDisplay').value = id;
-            document.getElementById('editFirstName').value = firstname;
-            document.getElementById('editLastName').value = lastname;
-            document.getElementById('editAge').value = age;
-            document.getElementById('editEmail').value = email;
-            document.getElementById('editPassword').value = '';
-
-            // Установка ролей (аналогично удалению)
-            const editRolesSelect = document.getElementById('editRoles');
-            // Снимем выбор со всех опций
-            for (const option of editRolesSelect.options) {
-                option.selected = false;
-            }
-
-            // Попытаемся определить роли пользователя по имени из data-roles
-            // data-roles может быть строкой JSON или текстом - зависит от backend.
-            // Предположим, это строка вида: "[ROLE_USER, ROLE_ADMIN]"
-            // или что-то подобное.
-
-            try {
-                // Попробуем распарсить строку как JSON (если это, например, [{"id":1,"name":"ROLE_USER"}])
-                const rolesParsed = JSON.parse(rolesRaw.replace(/'/g, '"')); // На случай одинарных кавычек
-                rolesParsed.forEach(role => {
-                    for (const option of editRolesSelect.options) {
-                        if (option.text === role.name || option.text === role.name.replace("ROLE_", "")) {
-                            option.selected = true;
-                        }
-                    }
-                });
-            } catch (e) {
-                // Если не JSON, возможно строка вида: [ROLE_USER, ROLE_ADMIN]
-                const cleaned = rolesRaw.replace(/[\[\]]/g, '').split(',');
-                cleaned.forEach(roleName => {
-                    const trimmed = roleName.trim();
-                    for (const option of editRolesSelect.options) {
-                        if (option.text === trimmed || option.text === trimmed.replace("ROLE_", "")) {
-                            option.selected = true;
-                        }
-                    }
-                });
-            }
-
-            // Показать модальное окно редактирования
-            editModal.style.display = 'flex';
-        });
-    });
-
-    closeEditModalBtn.addEventListener('click', () => {
-        editModal.style.display = 'none';
-    });
-
-    // Можно добавить закрытие модальных окон по клику вне формы
-    window.addEventListener('click', e => {
-        if (e.target === deleteModal) {
-            deleteModal.style.display = 'none';
-        }
-        if (e.target === editModal) {
-            editModal.style.display = 'none';
-        }
-    });
-
 </script>
 
 </body>

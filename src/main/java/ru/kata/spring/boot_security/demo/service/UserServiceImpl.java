@@ -27,6 +27,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void save(User user) {
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Такой email уже существует");
+        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
     }
@@ -62,5 +65,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public String encodePassword(String rawPassword) {
         return passwordEncoder.encode(rawPassword);
+    }
+
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
     }
 }

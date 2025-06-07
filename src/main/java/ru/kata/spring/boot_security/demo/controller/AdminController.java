@@ -10,6 +10,7 @@ import ru.kata.spring.boot_security.demo.repository.RoleRepository;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
+import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.util.HashSet;
 import java.util.List;
@@ -30,20 +31,21 @@ public class AdminController {
 
     // Метод для главной страницы админа
     @GetMapping({"", "/"})
-    public String adminHome(Model model, @RequestParam(required = false) Integer editUserId) {
+    public String adminHome(Model model,
+                            @RequestParam(required = false) Integer editUserId,
+                            Principal principal) {
         List<User> users = userService.findAll();
         List<Role> roles = roleService.getAllRoles();
 
-        User user;
-        if (editUserId != null) {
-            user = userService.findById(editUserId);
-        } else {
-            user = new User();
-        }
+        User editUser = (editUserId != null) ? userService.findById(editUserId) : new User();
+
+        // ⚠ Получаем текущего залогиненного пользователя по email
+        User currentUser = userService.findByEmail(principal.getName());
 
         model.addAttribute("users", users);
         model.addAttribute("roles", roles);
-        model.addAttribute("user", user);
+        model.addAttribute("user", editUser);
+        model.addAttribute("currentUser", currentUser); // вот это добавлено
 
         return "admin";
     }
@@ -84,17 +86,38 @@ public class AdminController {
     }
 
     @PostMapping("/save")
-    public String createUser(@ModelAttribute("newUser") User user,
-                             @RequestParam(value = "roles", required = false) List<Long> roleIds) {
+    public String createUser(@ModelAttribute("user") User user,
+                             @RequestParam(value = "roles", required = false) List<Long> roleIds,
+                             Model model,
+                             Principal principal,
+                             HttpServletRequest request) {
+
         Set<Role> roles = new HashSet<>();
         if (roleIds != null) {
             roles = new HashSet<>(roleService.findByIds(roleIds));
         }
         user.setRoles(roles);
 
-        // Тут нужно обязательно кодировать пароль перед сохранением
-        userService.save(user);
-        return "redirect:/admin";
+        try {
+            userService.save(user);
+            return "redirect:/admin";
+        } catch (IllegalArgumentException e) {
+            // Сохраняем все необходимые атрибуты
+            model.addAttribute("users", userService.findAll());
+            model.addAttribute("roles", roleService.getAllRoles());
+            model.addAttribute("currentUser", userService.findByEmail(principal.getName()));
+            model.addAttribute("emailError", e.getMessage());
+
+            // Добавляем параметр для JavaScript
+            model.addAttribute("showForm", true);
+
+            // Сохраняем выбранные роли
+            if (roleIds != null) {
+                model.addAttribute("selectedRoleIds", roleIds);
+            }
+
+            return "admin";
+        }
     }
 
     @PostMapping("/delete")
