@@ -30,12 +30,22 @@ public class AdminController {
 
     // Метод для главной страницы админа
     @GetMapping({"", "/"})
-    public String adminHome(Model model) {
-        // Можно добавить в модель список всех пользователей, ролей и т.д.
-        model.addAttribute("users", userService.findAll());
-        model.addAttribute("roles", roleService.getAllRoles());
-        model.addAttribute("user", new User());
-        return "admin";  // имя шаблона admin.html
+    public String adminHome(Model model, @RequestParam(required = false) Integer editUserId) {
+        List<User> users = userService.findAll();
+        List<Role> roles = roleService.getAllRoles();
+
+        User user;
+        if (editUserId != null) {
+            user = userService.findById(editUserId);
+        } else {
+            user = new User();
+        }
+
+        model.addAttribute("users", users);
+        model.addAttribute("roles", roles);
+        model.addAttribute("user", user);
+
+        return "admin";
     }
 
     // Пример метода для вывода конкретного пользователя
@@ -49,12 +59,29 @@ public class AdminController {
         return "user"; // или "edit-user", как у тебя шаблон называется
     }
 
-//    @GetMapping("/new")
-//    public String NewUserForm(Model model) {
-//        model.addAttribute("user", new User());
-//        model.addAttribute("roles", roleService.getAllRoles()); // если роли динамически
-//        return "new";
-//    }
+    @PostMapping("/edit")
+    public String updateUser(@ModelAttribute("editUser") User user,
+                             @RequestParam(value = "roles", required = false) List<Long> roleIds) {
+        Set<Role> roles = new HashSet<>();
+        if (roleIds != null) {
+            roles = new HashSet<>(roleService.findByIds(roleIds));
+        }
+        user.setRoles(roles);
+
+        // ⚠️ Обязательно: получить существующего пользователя для сравнения пароля
+        User existingUser = userService.findById(user.getId());
+
+        // Если пароль пустой, сохраняем старый
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            user.setPassword(existingUser.getPassword());
+        } else {
+            // Иначе — зашифровать новый
+            user.setPassword(userService.encodePassword(user.getPassword()));
+        }
+
+        userService.update(user);
+        return "redirect:/admin";
+    }
 
     @PostMapping("/save")
     public String createUser(@ModelAttribute("newUser") User user,
