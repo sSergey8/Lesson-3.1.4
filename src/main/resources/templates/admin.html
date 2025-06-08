@@ -145,6 +145,23 @@
                 width: 90%;
             }
         }
+
+        .nav-link.role-toggle {
+            color: #0d6efd;         /* синий текст */
+            background-color: transparent;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .nav-link.role-toggle.active {
+            background-color: #0d6efd;  /* синий фон */
+            color: white !important;    /* белый текст */
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -167,10 +184,14 @@
         <div class="col-md-2 bg-white pt-3 border-end min-vh-100">
             <ul class="nav flex-column nav-pills">
                 <li class="nav-item mb-2">
-                    <a href="#" id="adminViewBtn" class="nav-link active">Admin</a>
+                    <a href="#" id="adminViewBtn" class="nav-link role-toggle active">
+                        Admin
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" id="userViewBtn" class="nav-link">User</a>
+                    <a href="#" id="userViewBtn" class="nav-link role-toggle">
+                        User
+                    </a>
                 </li>
             </ul>
         </div>
@@ -467,16 +488,20 @@
         document.getElementById('adminViewBtn').addEventListener('click', function(e) {
             e.preventDefault();
             document.getElementById('usersTableDiv').classList.remove('user-view');
+
             this.classList.add('active');
             document.getElementById('userViewBtn').classList.remove('active');
+
             showAllUsers();
         });
 
         document.getElementById('userViewBtn').addEventListener('click', function(e) {
             e.preventDefault();
             document.getElementById('usersTableDiv').classList.add('user-view');
+
             this.classList.add('active');
             document.getElementById('adminViewBtn').classList.remove('active');
+
             showAdminUsersOnly();
         });
 
