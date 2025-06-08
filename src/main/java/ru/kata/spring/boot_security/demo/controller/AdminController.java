@@ -26,29 +26,23 @@ public class AdminController {
     }
 
     @GetMapping({"", "/"})
-    public String adminHome(Model model,
-                            @RequestParam(required = false) Integer editUserId,
-                            Principal principal) {
-        User editUser = (editUserId != null) ? userService.findById(editUserId) : new User();
-        prepareAdminModel(model, principal, editUser, null, null);
+    public String adminHome(Model model, Principal principal) {
+        prepareAdminModel(model, principal, new User(), null, null);
         return "admin";
     }
 
-    @GetMapping("/edit/{id}")
-    public String getUser(@PathVariable("id") int id, Model model) {
-        model.addAttribute("user", userService.findById(id));
-        return "user";
-    }
 
     @PostMapping("/edit")
-    public String updateUser(@ModelAttribute("editUser") User user,
-                             @RequestParam(value = "roles", required = false)
-                             List<Long> roleIds) {
-        Set<Role> roles = extractRoles(roleIds);
-        user.setRoles(roles);
+    public String updateUser(@ModelAttribute("user") User user,
+                             @RequestParam(value = "roles", required = false) List<Long> roleIds) {
+        user.setRoles(extractRoles(roleIds));
 
         User existingUser = userService.findById(user.getId());
-        updatePasswordIfChanged(user, existingUser);
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            user.setPassword(existingUser.getPassword());
+        } else {
+            user.setPassword(userService.encodePassword(user.getPassword()));
+        }
 
         userService.update(user);
         return "redirect:/admin";
@@ -60,8 +54,7 @@ public class AdminController {
                              Model model,
                              Principal principal) {
 
-        Set<Role> roles = extractRoles(roleIds);
-        user.setRoles(roles);
+        user.setRoles(extractRoles(roleIds));
 
         try {
             userService.save(user);
@@ -83,14 +76,6 @@ public class AdminController {
     // Вспомогательные методы
     private Set<Role> extractRoles(List<Long> roleIds) {
         return roleIds != null ? new HashSet<>(roleService.findByIds(roleIds)) : new HashSet<>();
-    }
-
-    private void updatePasswordIfChanged(User user, User existingUser) {
-        if (user.getPassword() == null || user.getPassword().isEmpty()) {
-            user.setPassword(existingUser.getPassword());
-        } else {
-            user.setPassword(userService.encodePassword(user.getPassword()));
-        }
     }
 
     private void prepareAdminModel(Model model, Principal principal, User editUser,

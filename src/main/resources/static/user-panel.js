@@ -166,8 +166,20 @@
 };
     fillModalForm('edit', data);
     document.getElementById('editModal').style.display = 'flex';
+        const editRolesSelect = document.getElementById('editRoles');
+        if (editRolesSelect) {
+            removePlaceholder(editRolesSelect);
+        }
 });
 });
+
+        function removePlaceholder(selectElement) {
+            const placeholderOption = selectElement.querySelector('option[disabled][selected]');
+            if (placeholderOption) {
+                placeholderOption.removeAttribute('selected');
+                placeholderOption.disabled = true;
+            }
+        }
 
     // Закрытие модальных окон по клику вне формы
 //     window.addEventListener('click', e => {

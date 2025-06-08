@@ -159,6 +159,10 @@
             background-color: #0d6efd; /* синий фон */
             color: white !important;   /* белый текст */
         }
+
+        #editPassword::placeholder {
+            color: #dc3545;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -271,8 +275,8 @@
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
                         <input type="email" th:field="*{email}" class="form-control"
-                               th:classappend="${emailError != null} ? 'is-invalid'" id="email" required autocomplete="off" />
-                        <div th:if="${emailError != null}" class="error-message" th:text="${emailError}"></div>
+                               th:classappend="${emailError != null} ? 'is-invalid'" id="email" required />
+                        <div th:if="${emailError != null}" class="invalid-feedback d-block" th:text="${emailError}"></div>
                     </div>
 
                     <div class="mb-3">
@@ -367,7 +371,9 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">Password</label>
-                <input type="password" name="password" class="form-control" id="editPassword" />
+                <input type="password" name="password" class="form-control text-danger" id="editPassword"
+                       placeholder="Оставь пустым если не меняешь"
+                       oninput="removePlaceholder(this)" />
             </div>
             <div class="mb-3">
                 <label class="form-label">Roles</label>
