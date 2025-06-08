@@ -13,6 +13,6 @@ public class LoginController {
         if (error != null) {
             model.addAttribute("loginError", "Неверный email или пароль");
         }
-        return "login";  // имя thymeleaf шаблона login.html
+        return "login";
     }
 }

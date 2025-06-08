@@ -1,6 +1,5 @@
 package ru.kata.spring.boot_security.demo.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,7 +31,7 @@ public class UserController {
         List<User> filteredUsers = allUsers.stream()
                 .filter(user -> user.getRoles().stream().anyMatch(role -> role.getName().equals("ROLE_USER")))
                 .filter(user -> user.getRoles().stream().noneMatch(role -> role.getName().equals("ROLE_ADMIN")))
-                .collect(Collectors.toList());  // <- здесь заменили на collect(Collectors.toList())
+                .collect(Collectors.toList());
 
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("users", filteredUsers);
