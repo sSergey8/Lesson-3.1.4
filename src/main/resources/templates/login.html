@@ -44,10 +44,10 @@
         }
 
         .small-alert {
-            padding: 0.5rem 0.5rem;   /* меньше внутренние отступы сверху/снизу и по бокам */
-            font-size: 1rem;          /* чуть меньше шрифт */
-            line-height: 1.1;           /* плотнее по высоте */
-            margin-bottom: 1rem;      /* чтобы не было слишком много места снизу */
+            padding: 0.5rem 0.5rem;
+            font-size: 1rem;
+            line-height: 1.1;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
@@ -58,7 +58,7 @@
 
         <h1 class="h3 mb-3">Please sign in</h1>
 
-        <!-- Вывод ошибки при неудачной валидации -->
+
         <div th:if="${loginError}" class="alert alert-danger small-alert" role="alert" th:text="${loginError}"></div>
 
         <input type="email" class="form-control mb-2" id="username" name="username"
