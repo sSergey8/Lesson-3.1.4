@@ -1,5 +1,7 @@
 package ru.kata.spring.boot_security.demo.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,12 +28,12 @@ public class UserRestController {
         return userService.findByEmail(principal.getName());
     }
 
-    // Получить только пользователей с ролью USER (и без ADMIN)
-    @GetMapping("/filtered")
-    public List<User> getOnlyUsersWithoutAdmin() {
+    // Получить всех пользователей с ролью USER (без ADMIN)
+    @GetMapping
+    public List<User> getOnlyUsersWithRoleUser() {
         return userService.findAll().stream()
-                .filter(user -> user.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_USER")))
-                .filter(user -> user.getRoles().stream().noneMatch(r -> r.getName().equals("ROLE_ADMIN")))
+                .filter(user -> user.getRoles().stream()
+                        .anyMatch(role -> "ROLE_USER".equals(role.getName())))
                 .collect(Collectors.toList());
     }
 }

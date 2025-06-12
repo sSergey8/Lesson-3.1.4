@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const editModalClose = document.getElementById('editModalClose');
     const editUserForm = document.getElementById('editUserForm');
     const editId = document.getElementById('editId');
+    const editIdDisplay = document.getElementById('editIdDisplay');
     const editFirstName = document.getElementById('editFirstName');
     const editLastName = document.getElementById('editLastName');
     const editAge = document.getElementById('editAge');
@@ -36,6 +37,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const deleteModalClose = document.getElementById('deleteModalClose');
     const deleteUserForm = document.getElementById('deleteUserForm');
     const deleteId = document.getElementById('deleteId');
+    const deleteVisibleId = document.getElementById('deleteVisibleId');
     const deleteFirstName = document.getElementById('deleteFirstName');
     const deleteLastName = document.getElementById('deleteLastName');
     const deleteAge = document.getElementById('deleteAge');
@@ -83,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Отрисовка таблицы
     function renderUsersTable(users) {
-        usersTableBody.innerHTML = '';
+        usersTableBody.textContent = '';
 
         users.forEach(user => {
             const tr = document.createElement('tr');
@@ -188,7 +190,6 @@ document.addEventListener("DOMContentLoaded", function() {
         userViewBtn.classList.remove('active');
         body.classList.remove('user-view');
         showUsersView();
-        showActions(true);
     });
 
     userViewBtn.addEventListener('click', e => {
@@ -197,7 +198,6 @@ document.addEventListener("DOMContentLoaded", function() {
         adminViewBtn.classList.remove('active');
         body.classList.add('user-view');
         showUsersView();
-        showActions(false);
     });
 
     // Показ/скрытие колонок с действиями
@@ -227,6 +227,19 @@ document.addEventListener("DOMContentLoaded", function() {
 
         showUsersBtn.classList.add('active');
         showNewUserFormBtn.classList.remove('active');
+
+        if (body.classList.contains('user-view')) {
+            // Фильтруем пользователей по роли admin
+            const admins = allUsers.filter(user =>
+                user.roles.some(role => role.name === 'ROLE_ADMIN')
+            );
+            renderUsersTable(admins);
+            showActions(false); // скрываем кнопки редактирования и удаления
+        } else {
+            // Показываем всех пользователей с кнопками
+            renderUsersTable(allUsers);
+            showActions(true);
+        }
     }
 
     function showNewUserForm() {
@@ -235,15 +248,39 @@ document.addEventListener("DOMContentLoaded", function() {
 
         showUsersBtn.classList.remove('active');
         showNewUserFormBtn.classList.add('active');
+
+        // Сбросить все поля формы при открытии
+        userForm.reset();
+
+        // Скрыть ошибку email, если она была показана ранее
+        emailErrorDiv.style.display = 'none';
+
+        // Если роли не сбрасываются (например, select с multiple),
+        // можно очистить их вручную
+        Array.from(rolesSelect.options).forEach(option => option.selected = false);
     }
 
     // Инициализация
     (async function init() {
         await loadRoles();
         await loadUsers();
+        await loadCurrentUser(); // 👈 добавили сюда
         showUsersView();
         showActions(true);
     })();
+
+    // Загрузка текущего пользователя и отображение в navbar
+    async function loadCurrentUser() {
+        try {
+            const response = await axios.get('/api/admin/current');
+            const user = response.data;
+            const roles = user.roles?.map(role => role.name.replace('ROLE_', '')).join(', ') || 'none';
+            document.getElementById('currentUserInfo').textContent = `${user.email} with roles: ${roles}`;
+        } catch (error) {
+            console.error('Ошибка при загрузке текущего пользователя:', error);
+            document.getElementById('currentUserInfo').textContent = 'Ошибка загрузки';
+        }
+    }
 
     // Открыть модалку редактирования
     function openEditModal(event) {
@@ -252,6 +289,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!user) return;
 
         editId.value = user.id;
+        editIdDisplay.value = user.id;
         editFirstName.value = user.firstName;
         editLastName.value = user.lastName;
         editAge.value = user.age;
@@ -278,8 +316,8 @@ document.addEventListener("DOMContentLoaded", function() {
             lastName: editLastName.value,
             age: +editAge.value,
             email: editEmail.value,
-            password: editPassword.value || null,
-            roles: roles
+            roles: roles,
+            ...(editPassword.value ? { password: editPassword.value } : {})
         };
 
         try {
@@ -309,6 +347,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!user) return;
 
         // Заполняем поля
+        deleteVisibleId.value = user.id;
         deleteId.value = user.id;
         deleteFirstName.value = user.firstName;
         deleteLastName.value = user.lastName;
@@ -328,7 +367,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
             const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-            await axios.delete(`/api/users/${userIdToDelete}`, {
+            await axios.delete(`/api/admin/users/${userIdToDelete}`, {
                 headers: {
                     [csrfHeader]: csrfToken
                 }
