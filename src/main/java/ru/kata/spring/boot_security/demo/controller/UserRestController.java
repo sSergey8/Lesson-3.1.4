@@ -22,13 +22,11 @@ public class UserRestController {
         this.userService = userService;
     }
 
-    // Получить текущего пользователя
     @GetMapping("/current")
     public User getCurrentUser(Principal principal) {
         return userService.findByEmail(principal.getName());
     }
 
-    // Получить всех пользователей с ролью USER (без ADMIN)
     @GetMapping
     public List<User> getOnlyUsersWithRoleUser() {
         return userService.findAll().stream()

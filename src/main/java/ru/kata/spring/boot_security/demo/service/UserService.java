@@ -11,6 +11,5 @@ public interface UserService extends UserDetailsService {
     void save(User user);
     void update(User user);
     void deleteById(int id);
-    String encodePassword(String rawPassword);
     User findByEmail(String email);
 }

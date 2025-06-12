@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         });
     }
 
-    // 🟢 Получение текущего пользователя
+    // Получение текущего пользователя
     async function loadCurrentUser() {
         try {
             const response = await axios.get('/api/user/current');

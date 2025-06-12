@@ -28,7 +28,7 @@
         </div>
 
         <div class="col-md-10 pt-4">
-            <h2>User Panel</h2>
+            <h2>User information-page</h2>
 
             <ul class="nav nav-tabs mb-3">
                 <li class="nav-item">
@@ -37,7 +37,7 @@
             </ul>
 
             <div id="usersTableDiv">
-                <h5 class="fw-semibold mb-3">All Users (Only ROLE_USER)</h5>
+                <h5 class="fw-semibold mb-3">About user</h5>
                 <div class="card">
                     <div class="card-body p-0">
                         <table class="table mb-0 table-striped">
@@ -48,7 +48,6 @@
                             </tr>
                             </thead>
                             <tbody id="userTableBody">
-                            <!-- Строки вставляются через JS -->
                             </tbody>
                         </table>
                     </div>
@@ -60,5 +59,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script th:src="@{/user-role-panel.js}"></script>
+
 </body>
 </html>

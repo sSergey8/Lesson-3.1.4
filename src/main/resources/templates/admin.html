@@ -228,7 +228,7 @@
         </div>
 
         <div class="col-md-10 pt-4">
-            <h2>User panel</h2>
+            <h2>Admin panel</h2>
 
             <ul class="nav nav-tabs mb-3 form-tabs">
                 <li class="nav-item">
@@ -404,39 +404,8 @@
     </div>
 </div>
 
-
-<!-- Новое модальное окно под REST -->
-<div id="restModal" class="modal-overlay" style="display:none;">
-    <div class="custom-modal" role="dialog" aria-modal="true" aria-labelledby="restModalLabel">
-        <span class="close-icon" id="restModalClose">&times;</span>
-        <h5 id="restModalLabel">REST Modal Title</h5>
-        <hr />
-        <form id="restForm" autocomplete="off">
-            <input type="hidden" id="restItemId" />
-
-            <div class="mb-3">
-                <label for="restField1" class="form-label">Field 1</label>
-                <input type="text" id="restField1" class="form-control" required />
-            </div>
-
-            <div class="mb-3">
-                <label for="restField2" class="form-label">Field 2</label>
-                <input type="number" id="restField2" class="form-control" min="0" required />
-            </div>
-
-            <!-- Другие поля, если нужны -->
-
-            <div class="button-group">
-                <button type="button" id="restCancelBtn" class="btn btn-secondary">Cancel</button>
-                <button type="submit" class="btn btn-primary">Send REST Request</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-
-
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script th:src="@{/user-panel.js}"></script>
+
 </body>
 </html>
