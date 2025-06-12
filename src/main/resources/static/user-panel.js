@@ -1,191 +1,343 @@
+document.addEventListener("DOMContentLoaded", function() {
+    // Элементы навигации ролей
+    const adminViewBtn = document.getElementById('adminViewBtn');
+    const userViewBtn = document.getElementById('userViewBtn');
+    const body = document.body;
 
-    function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
+    // Кнопки вкладок
+    const showUsersBtn = document.getElementById('showUsersBtn');
+    const showNewUserFormBtn = document.getElementById('showNewUserFormBtn');
 
-    // Парсит список ролей
-    function parseRoles(rolesRaw) {
-    try {
-    return JSON.parse(rolesRaw.replace(/'/g, '"'));
-} catch (e) {
-    return rolesRaw.replace(/[\[\]]/g, '').split(',').map(role => {
-    const name = role.trim().replace("ROLE_", "");
-    return { name: name };
-});
-}
-}
+    // Основные блоки
+    const usersTableDiv = document.getElementById('usersTableDiv');
+    const newUserFormDiv = document.getElementById('newUserFormDiv');
 
-    // Устанавливает выбранные опции в <select> (мультисписке) ролей
-    function setSelectedRoles(selectElement, roles) {
-    Array.from(selectElement.options).forEach(option => option.selected = false);
-    roles.forEach(role => {
-    Array.from(selectElement.options).forEach(option => {
-    if (option.text === role.name || option.text === role.name.replace("ROLE_", "")) {
-    option.selected = true;
-}
-});
-});
-}
+    // Таблица и формы
+    const usersTableBody = usersTableDiv.querySelector('tbody');
+    const userForm = document.getElementById('userForm');
+    const rolesSelect = document.getElementById('roles');
+    const emailErrorDiv = document.getElementById('emailError');
 
-     // Заполняет модальные формы "edit" или "delete"
-    function fillModalForm(modalPrefix, data) {
-    document.getElementById(`${modalPrefix}UserId`).value = data.id;
-    document.getElementById(`${modalPrefix}UserIdDisplay`).value = data.id;
-    document.getElementById(`${modalPrefix}FirstName`).value = data.firstname;
-    document.getElementById(`${modalPrefix}LastName`).value = data.lastname;
-    document.getElementById(`${modalPrefix}Age`).value = data.age;
-    document.getElementById(`${modalPrefix}Email`).value = data.email;
+    // Модалка редактирования
+    const editUserModal = document.getElementById('editUserModal');
+    const editModalClose = document.getElementById('editModalClose');
+    const editUserForm = document.getElementById('editUserForm');
+    const editId = document.getElementById('editId');
+    const editFirstName = document.getElementById('editFirstName');
+    const editLastName = document.getElementById('editLastName');
+    const editAge = document.getElementById('editAge');
+    const editEmail = document.getElementById('editEmail');
+    const editPassword = document.getElementById('editPassword');
+    const editRoles = document.getElementById('editRoles');
+    const editUserCancelBtn = document.getElementById('editUserCancelBtn');
 
-    if (modalPrefix === 'delete') {
-    const roles = parseRoles(data.roles);
-    document.getElementById('deleteRole').value = roles.length > 0 ? roles[0].name : '';
-} else {
-    const roles = parseRoles(data.roles);
-    setSelectedRoles(document.getElementById(`${modalPrefix}Roles`), roles);
-}
-}
+    // Модалка удаления
+    const deleteUserModal = document.getElementById('deleteUserModal');
+    const deleteModalClose = document.getElementById('deleteModalClose');
+    const deleteUserForm = document.getElementById('deleteUserForm');
+    const deleteId = document.getElementById('deleteId');
+    const deleteFirstName = document.getElementById('deleteFirstName');
+    const deleteLastName = document.getElementById('deleteLastName');
+    const deleteAge = document.getElementById('deleteAge');
+    const deleteEmail = document.getElementById('deleteEmail');
+    const deleteRoles = document.getElementById('deleteRoles');
+    const deleteCancelBtn = document.getElementById('deleteCancelBtn');
 
+    let allRoles = []; // Хранение ролей
+    let allUsers = []; // Хранение пользователей
+    let userIdToDelete = null; // ID пользователя для удаления
 
-    // Переключает вкладки
-    function showTab(tabName) {
-    const showTable = tabName === 'usersTable';
-    document.getElementById('usersTableDiv').style.display = showTable ? '' : 'none';
-    document.getElementById('newUserFormDiv').style.display = showTable ? 'none' : '';
-    document.getElementById('showUsersBtn').classList.toggle('active', showTable);
-    document.getElementById('showNewUserFormBtn').classList.toggle('active', !showTable);
-
-    if (!showTable) {
-    resetFormErrors();
-}
-}
-
-    function showAllUsers() {
-    document.querySelectorAll('#usersTableDiv tbody tr').forEach(row => {
-        row.style.display = '';
-    });
-}
-
-    // Фильтрует таблицу, показывает только пользователей ADMIN.
-    function showAdminUsersOnly() {
-    document.querySelectorAll('#usersTableDiv tbody tr').forEach(row => {
-        const rolesText = row.querySelector('td:nth-child(6)').textContent;
-        if (rolesText.includes('ADMIN')) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
+    // Загрузка ролей
+    async function loadRoles() {
+        try {
+            const response = await axios.get('/api/admin/roles');
+            allRoles = response.data;
+            populateRolesSelect(rolesSelect, allRoles);
+            populateRolesSelect(editRoles, allRoles);
+        } catch (error) {
+            console.error('Ошибка загрузки ролей:', error);
         }
-    });
-}
+    }
 
-    // Очищает ошибки формы
-    function resetFormErrors() {
-    const emailField = document.getElementById('email');
-    if (emailField) emailField.classList.remove('is-invalid');
-    document.querySelectorAll('.error-message').forEach(msg => msg.style.display = 'none');
-}
+    // Заполнение select ролей
+    function populateRolesSelect(selectElement, roles) {
+        selectElement.innerHTML = '';
+        roles.forEach(role => {
+            const option = document.createElement('option');
+            option.value = role.id;
+            option.textContent = role.name.replace('ROLE_', '');
+            selectElement.appendChild(option);
+        });
+    }
 
-    // Инициализация и обработчики событий
-    document.addEventListener('DOMContentLoaded', function() {
+    // Загрузка пользователей
+    async function loadUsers() {
+        try {
+            const response = await axios.get('/api/admin/users');
+            allUsers = response.data;
+            renderUsersTable(allUsers);
+        } catch (error) {
+            console.error('Ошибка загрузки пользователей:', error);
+        }
+    }
 
-    if (/*[[${emailError}]]*/ false) {
-    document.getElementById('email').focus();
-}
+    // Отрисовка таблицы
+    function renderUsersTable(users) {
+        usersTableBody.innerHTML = '';
 
-    // Переключает на вкладку с таблицей пользователей
-    document.getElementById('showUsersBtn').addEventListener('click', e => {
-    e.preventDefault();
-    showTab('usersTable');
-});
+        users.forEach(user => {
+            const tr = document.createElement('tr');
 
-    // Переключает на вкладку "создание нового пользователя"
-        document.getElementById('showNewUserFormBtn').addEventListener('click', e => {
-            e.preventDefault();
-            showTab('newUserForm');
-            // Очистка полей формы нового пользователя
-            document.getElementById('firstName').value = '';
-            document.getElementById('lastName').value = '';
-            document.getElementById('age').value = '';
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
+            tr.innerHTML = `
+                <td>${user.id}</td>
+                <td>${user.firstName}</td>
+                <td>${user.lastName}</td>
+                <td>${user.age}</td>
+                <td>${user.email}</td>
+                <td>${user.roles.map(r => r.name.replace('ROLE_', '')).join(', ')}</td>
+                <td class="action-column">
+                    <button class="btn btn-sm btn-primary edit-btn" data-id="${user.id}">Edit</button>
+                </td>
+                <td class="action-column">
+                    <button class="btn btn-sm btn-danger delete-btn" data-id="${user.id}">Delete</button>
+                </td>
+            `;
 
-            const rolesSelect = document.getElementById('roles');
-            if (rolesSelect) {
-                Array.from(rolesSelect.options).forEach(option => option.selected = false);
-            }
-            resetFormErrors();
+            usersTableBody.appendChild(tr);
         });
 
-    // Включает "админский вид"
-    document.getElementById('adminViewBtn').addEventListener('click', function(e) {
-    e.preventDefault();
-    document.getElementById('usersTableDiv').classList.remove('user-view');
+        // Привязка событий к кнопкам
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', openEditModal);
+        });
 
-    this.classList.add('active');
-    document.getElementById('userViewBtn').classList.remove('active');
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', openDeleteModal);
+        });
+    }
 
-    showAllUsers();
-});
+    // Показать модалку
+    function showModal(modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
 
-    // Включает "пользовательский вид"
-    document.getElementById('userViewBtn').addEventListener('click', function(e) {
-    e.preventDefault();
-    document.getElementById('usersTableDiv').classList.add('user-view');
+    // Скрыть модалку
+    function hideModal(modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
 
-    this.classList.add('active');
-    document.getElementById('adminViewBtn').classList.remove('active');
+    // Закрытие модалки редактирования
+    editModalClose.addEventListener('click', () => hideModal(editUserModal));
+    editUserCancelBtn.addEventListener('click', () => hideModal(editUserModal));
+    editUserModal.addEventListener('click', e => {
+        if (e.target === editUserModal) hideModal(editUserModal);
+    });
 
-    showAdminUsersOnly();
-});
+    // Закрытие модалки удаления
+    deleteModalClose.addEventListener('click', () => hideModal(deleteUserModal));
+    deleteCancelBtn.addEventListener('click', () => hideModal(deleteUserModal));
+    deleteUserModal.addEventListener('click', e => {
+        if (e.target === deleteUserModal) hideModal(deleteUserModal);
+    });
 
-    // Обработчики кнопки Delete. Открывает модалку удаления
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-    const data = {
-    id: this.getAttribute('data-id'),
-    firstname: this.getAttribute('data-firstname'),
-    lastname: this.getAttribute('data-lastname'),
-    age: this.getAttribute('data-age'),
-    email: this.getAttribute('data-email'),
-    roles: JSON.stringify([{name: this.getAttribute('data-role')}])
-};
-    fillModalForm('delete', data);
-    document.getElementById('deleteModal').style.display = 'flex';
-});
-});
+    // Отправка формы создания пользователя
+    userForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        emailErrorDiv.style.display = 'none';
 
-    // // Обработчики кнопки edit. Открывает модалку редактирования
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-    const data = {
-    id: this.getAttribute('data-id'),
-    firstname: this.getAttribute('data-firstname'),
-    lastname: this.getAttribute('data-lastname'),
-    age: this.getAttribute('data-age'),
-    email: this.getAttribute('data-email'),
-    roles: this.getAttribute('data-roles')
-};
-    fillModalForm('edit', data);
-    document.getElementById('editModal').style.display = 'flex';
-        const editRolesSelect = document.getElementById('editRoles');
-        if (editRolesSelect) {
-            removePlaceholder(editRolesSelect);
-        }
-});
-});
+        const formData = new FormData(userForm);
+        const roles = Array.from(rolesSelect.selectedOptions).map(opt => ({id: opt.value}));
 
-        function removePlaceholder(selectElement) {
-            const placeholderOption = selectElement.querySelector('option[disabled][selected]');
-            if (placeholderOption) {
-                placeholderOption.removeAttribute('selected');
-                placeholderOption.disabled = true;
+        const newUser = {
+            firstName: formData.get('firstname'),
+            lastName: formData.get('lastname'),
+            age: +formData.get('age'),
+            email: formData.get('email'),
+            password: formData.get('password'),
+            roles: roles
+        };
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+        try {
+            await axios.post('/api/admin/users', newUser, {
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+            await loadUsers();
+            userForm.reset();
+            showUsersView();
+        } catch (error) {
+            if (error.response && error.response.data && error.response.data.message) {
+                emailErrorDiv.textContent = error.response.data.message;
+                emailErrorDiv.style.display = 'block';
+            } else {
+                console.error('Ошибка при создании пользователя:', error);
             }
         }
+    });
 
-    // Закрытие модальных окон по клику вне формы
-//     window.addEventListener('click', e => {
-//     if (e.target.classList.contains('modal-overlay')) {
-//     e.target.style.display = 'none';
-// }
-// });
+    // Переключение видов (Admin/User)
+    adminViewBtn.addEventListener('click', e => {
+        e.preventDefault();
+        adminViewBtn.classList.add('active');
+        userViewBtn.classList.remove('active');
+        body.classList.remove('user-view');
+        showUsersView();
+        showActions(true);
+    });
 
+    userViewBtn.addEventListener('click', e => {
+        e.preventDefault();
+        userViewBtn.classList.add('active');
+        adminViewBtn.classList.remove('active');
+        body.classList.add('user-view');
+        showUsersView();
+        showActions(false);
+    });
+
+    // Показ/скрытие колонок с действиями
+    function showActions(show) {
+        const actionColumns = document.querySelectorAll('.action-column');
+        actionColumns.forEach(col => {
+            col.style.display = show ? 'table-cell' : 'none';
+        });
+    }
+
+    // Показ таблицы пользователей
+    showUsersBtn.addEventListener('click', e => {
+        e.preventDefault();
+        showUsersView();
+    });
+
+    // Показ формы добавления пользователя
+    showNewUserFormBtn.addEventListener('click', e => {
+        e.preventDefault();
+        showNewUserForm();
+    });
+
+    // Функции переключения между табами
+    function showUsersView() {
+        usersTableDiv.style.display = 'block';
+        newUserFormDiv.style.display = 'none';
+
+        showUsersBtn.classList.add('active');
+        showNewUserFormBtn.classList.remove('active');
+    }
+
+    function showNewUserForm() {
+        usersTableDiv.style.display = 'none';
+        newUserFormDiv.style.display = 'block';
+
+        showUsersBtn.classList.remove('active');
+        showNewUserFormBtn.classList.add('active');
+    }
+
+    // Инициализация
+    (async function init() {
+        await loadRoles();
+        await loadUsers();
+        showUsersView();
+        showActions(true);
+    })();
+
+    // Открыть модалку редактирования
+    function openEditModal(event) {
+        const userId = event.target.dataset.id;
+        const user = allUsers.find(u => u.id == userId);
+        if (!user) return;
+
+        editId.value = user.id;
+        editFirstName.value = user.firstName;
+        editLastName.value = user.lastName;
+        editAge.value = user.age;
+        editEmail.value = user.email;
+        editPassword.value = '';
+
+        Array.from(editRoles.options).forEach(option => {
+            option.selected = user.roles.some(r => r.id == option.value);
+        });
+
+        showModal(editUserModal);
+    }
+
+// Отправка формы редактирования пользователя
+    editUserForm.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const id = editId.value;
+        const roles = Array.from(editRoles.selectedOptions).map(opt => ({ id: opt.value }));
+
+        const updatedUser = {
+            id: +id,
+            firstName: editFirstName.value,
+            lastName: editLastName.value,
+            age: +editAge.value,
+            email: editEmail.value,
+            password: editPassword.value || null,
+            roles: roles
+        };
+
+        try {
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+            await axios.put(`/api/admin/users/${id}`, updatedUser, {
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+
+            await loadUsers();
+            hideModal(editUserModal);
+        } catch (error) {
+            console.error('Ошибка при обновлении пользователя:', error);
+        }
+    });
+
+
+
+
+    // Открыть модалку удаления
+    function openDeleteModal(event) {
+        userIdToDelete = event.target.dataset.id;
+        const user = allUsers.find(u => u.id == userIdToDelete);
+        if (!user) return;
+
+        // Заполняем поля
+        deleteId.value = user.id;
+        deleteFirstName.value = user.firstName;
+        deleteLastName.value = user.lastName;
+        deleteAge.value = user.age;
+        deleteEmail.value = user.email;
+        deleteRoles.value = user.roles.map(r => r.name.replace('ROLE_', '')).join(', ');
+
+        showModal(deleteUserModal);
+    }
+
+// Отправка формы удаления пользователя
+    deleteUserForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!userIdToDelete) return;
+
+        try {
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+            await axios.delete(`/api/users/${userIdToDelete}`, {
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+            await loadUsers();
+            hideModal(deleteUserModal);
+            userIdToDelete = null;
+        } catch (error) {
+            console.error('Ошибка при удалении пользователя:', error);
+        }
+    });
 });

@@ -1,5 +1,6 @@
 package ru.kata.spring.boot_security.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.GrantedAuthority;
 import javax.persistence.*;
@@ -19,9 +20,11 @@ public class User implements UserDetails {
     private String email;
 
     @Column(name = "firstname")
+    @JsonProperty("firstName")
     private String firstname;
 
     @Column(name = "lastname")
+    @JsonProperty("lastName")
     private String lastname;
 
     @Column(name = "age")
