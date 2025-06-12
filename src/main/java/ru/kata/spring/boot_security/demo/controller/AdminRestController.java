@@ -39,15 +39,7 @@ public class AdminRestController {
     @PostMapping("/users")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         try {
-            List<Long> roleIds = user.getRoles().stream()
-                    .map(Role::getId)
-                    .collect(Collectors.toList());
-
-            List<Role> resolvedRoles = roleService.findByIds(roleIds);
-            user.setRoles(new HashSet<>(resolvedRoles));
-
-            userService.save(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(user));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Collections.singletonMap("message", e.getMessage()));
