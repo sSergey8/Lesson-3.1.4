@@ -234,9 +234,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 user.roles.some(role => role.name === 'ROLE_ADMIN')
             );
             renderUsersTable(admins);
-            showActions(false); // скрываем кнопки редактирования и удаления
+            showActions(false);
         } else {
-            // Показываем всех пользователей с кнопками
             renderUsersTable(allUsers);
             showActions(true);
         }
@@ -248,15 +247,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
         showUsersBtn.classList.remove('active');
         showNewUserFormBtn.classList.add('active');
-
-        // Сбросить все поля формы при открытии
         userForm.reset();
 
-        // Скрыть ошибку email, если она была показана ранее
         emailErrorDiv.style.display = 'none';
-
-        // Если роли не сбрасываются (например, select с multiple),
-        // можно очистить их вручную
         Array.from(rolesSelect.options).forEach(option => option.selected = false);
     }
 
